@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: MyHomePage(title: 'Flutter image Classification'),
+      home: MyHomePage(title: 'Fruit Image Classification'),
     );
   }
 }
@@ -47,42 +47,69 @@ class _MyHomePageState extends State<MyHomePage> {
     });
     List recognitions = await tensor.predictImage(image);
     setState(() {
-      _recognitions=recognitions;
+      _recognitions = recognitions;
+    });
+  }
+
+  selectFromCameraPicker() async {
+    var image = await ImagePicker.pickImage(source: ImageSource.camera);
+    if (image == null) return;
+    setState(() {
+      _image = image;
+    });
+    List recognitions = await tensor.predictImage(image);
+    setState(() {
+      _recognitions = recognitions;
     });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(widget.title),
-      ),
-      body: Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        appBar: AppBar(
+          title: Text(widget.title),
+        ),
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              _image == null ? Text('No image selected.') : Image.file(_image),
+              new Container(
+                height: 200.0,
+                child: ListView.builder(
+                  itemCount: _recognitions.length,
+                  itemBuilder: (context, index) {
+                    return ListTile(
+                      title: Text(_recognitions[index]['label']),
+                      subtitle: Text(
+                          "Confidence ${_recognitions[index]['confidence'].toString()}"),
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+        floatingActionButton: Stack(
           children: <Widget>[
-            _image == null ? Text('No image selected.') : Image.file(_image),
-            new Container(
-              height: 200.0,
-              child: ListView.builder(
-                itemCount: _recognitions.length,
-                itemBuilder: (context, index) {
-                  return ListTile(
-                    title: Text(_recognitions[index]['label']),
-                    subtitle: Text(
-                        "Confidence ${_recognitions[index]['confidence'].toString()}"),
-                  );
-                },
+            Padding(
+              padding: EdgeInsets.only(left: 31),
+              child: Align(
+                alignment: Alignment.bottomLeft,
+                child: FloatingActionButton(
+                  onPressed: selectFromCameraPicker,
+                  child: Icon(Icons.camera_alt),
+                ),
+              ),
+            ),
+            Align(
+              alignment: Alignment.bottomRight,
+              child: FloatingActionButton(
+                onPressed: selectFromImagePicker,
+                child: Icon(Icons.image),
               ),
             ),
           ],
-        ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        child: Icon(Icons.image),
-        tooltip: "Pick Image from gallery",
-        onPressed: selectFromImagePicker,
-      ),
-    );
+        ));
   }
 }
